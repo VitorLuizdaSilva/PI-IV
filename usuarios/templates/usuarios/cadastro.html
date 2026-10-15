@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - Produtividade Obra</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: #f1f5f9; /* Cinza claro suave */
+            color: #1e293b;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .card {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid #e2e8f0;
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            margin-bottom: 24px;
+            color: #0f172a;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* Estilização dos campos gerados pelo Django */
+        form p {
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        form label {
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        form input {
+            padding: 11px 14px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            background-color: #f8fafc;
+            color: #0f172a;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        form input:focus {
+            background-color: #ffffff;
+            border-color: #475569;
+            box-shadow: 0 0 0 3px rgba(71, 85, 105, 0.1);
+        }
+
+        form .helptext, form .help-text {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        form ul.errorlist {
+            list-style: none;
+            color: #dc2626;
+            font-size: 0.75rem;
+            margin-top: 4px;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 12px;
+            background-color: #334155; /* Cinza chumbo elegante */
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.2s;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #1e293b;
+        }
+
+        .footer-link {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        .footer-link a {
+            color: #334155;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .footer-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>Criar Conta</h1>
+
+        <form method="POST" id="form-cadastro">
+            {% csrf_token %}
+            {{ formulario.as_p }}
+            <button type="submit">Cadastrar</button>
+        </form>
+
+        <div class="footer-link">
+            Já possui uma conta? <a href="{% url 'login' %}">Entrar</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const primeiroInput = document.querySelector("#form-cadastro input");
+            if (primeiroInput) primeiroInput.focus();
+        });
+    </script>
+</body>
+</html>

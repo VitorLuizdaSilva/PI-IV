@@ -19,7 +19,7 @@ router.register(
 urlpatterns = [
 
     path(
-        "",
+        "dados/",
         include(router.urls)
     ),
 
