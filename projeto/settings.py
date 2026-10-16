@@ -10,22 +10,43 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
+import os
 from pathlib import Path
+
+from django.core.exceptions import ImproperlyConfigured
+
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
+
+
+def obter_variavel(nome):
+    valor = os.getenv(nome)
+    if not valor:
+        raise ImproperlyConfigured(
+            f"A variável de ambiente obrigatória {nome} não foi definida."
+        )
+    return valor
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-_mg%*v(ah_k0u1!^kz%t8lw)3pyy7o757vo_^(wkaaq8g8ew9t'
+SECRET_KEY = os.getenv(
+    "DJANGO_SECRET_KEY",
+    "django-insecure-chave-apenas-para-desenvolvimento",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() == "true"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv(
+    "DJANGO_ALLOWED_HOSTS",
+    "127.0.0.1,localhost",
+).split(",")
 
 
 # Application definition
@@ -75,12 +96,23 @@ WSGI_APPLICATION = 'projeto.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+'''"default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": obter_variavel("DB_NAME"),
+        "USER": obter_variavel("DB_USER"),
+        "PASSWORD": obter_variavel("DB_PASSWORD"),
+        "HOST": obter_variavel("DB_HOST"),
+        "PORT": obter_variavel("DB_PORT"),
+        "CONN_MAX_AGE": 60,
+    }'''
+
 
 
 # Password validation
@@ -105,9 +137,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "pt-br"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "America/Sao_Paulo"
 
 USE_I18N = True
 
@@ -134,3 +166,6 @@ LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "dashboard"
 
 LOGOUT_REDIRECT_URL = "login"
+'''EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"'''
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

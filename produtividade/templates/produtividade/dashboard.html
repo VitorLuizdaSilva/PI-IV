@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Painel de produtividade</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --azul: #12355b;
+            --azul-claro: #e8f1f8;
+            --verde: #1f7a5a;
+            --cinza: #5d6773;
+            --borda: #dbe2e8;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: #f4f6f8;
+            color: #17212b;
+            font: 16px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        header {
+            background: var(--azul);
+            color: white;
+            padding: 28px max(24px, calc((100% - 1180px) / 2));
+        }
+        header h1 { margin: 0 0 6px; font-size: clamp(1.5rem, 4vw, 2.25rem); }
+        header p { margin: 0; opacity: .85; }
+        main { max-width: 1180px; margin: 0 auto; padding: 28px 20px 48px; }
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+        .card, .painel {
+            background: white;
+            border: 1px solid var(--borda);
+            border-radius: 12px;
+            box-shadow: 0 5px 18px rgb(22 44 66 / 6%);
+        }
+        .card { padding: 20px; }
+        .card span { color: var(--cinza); font-size: .88rem; }
+        .card strong { display: block; margin-top: 6px; font-size: 1.7rem; color: var(--azul); }
+        .grade { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(300px, .7fr); gap: 20px; }
+        .painel { padding: 22px; overflow: hidden; }
+        h2 { margin: 0 0 18px; font-size: 1.2rem; color: var(--azul); }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border-bottom: 1px solid var(--borda); padding: 11px 8px; text-align: left; }
+        th { color: var(--cinza); font-size: .82rem; text-transform: uppercase; }
+        form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        label { color: var(--cinza); font-size: .85rem; }
+        label span { display: block; margin-bottom: 4px; }
+        input, select, button {
+            width: 100%;
+            border: 1px solid #b9c5cf;
+            border-radius: 7px;
+            padding: 10px;
+            background: white;
+            font: inherit;
+        }
+        button {
+            grid-column: 1 / -1;
+            border: 0;
+            background: var(--verde);
+            color: white;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        button:hover { filter: brightness(.94); }
+        #resultado {
+            display: none;
+            margin-top: 16px;
+            padding: 14px;
+            border-radius: 8px;
+            background: var(--azul-claro);
+        }
+        .links { margin-top: 22px; color: var(--cinza); }
+        .links a { color: var(--azul); }
+        @media (max-width: 800px) {
+            .grade { grid-template-columns: 1fr; }
+            .tabela { overflow-x: auto; }
+        }
+        @media (max-width: 480px) {
+            form { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Painel de produtividade</h1>
+        <p>Protótipo acadêmico para acompanhamento de obras</p>
+    </header>
+
+    <main>
+        <section class="cards" aria-label="Indicadores gerais">
+            <article class="card"><span>Registros</span><strong id="total-registros">-</strong></article>
+            <article class="card"><span>Área produzida</span><strong id="area-total">-</strong></article>
+            <article class="card"><span>Horas trabalhadas</span><strong id="horas-totais">-</strong></article>
+            <article class="card"><span>Produtividade média</span><strong id="produtividade-media">-</strong></article>
+        </section>
+
+        <section class="grade">
+            <article class="painel">
+                <h2>Últimos apontamentos</h2>
+                <div class="tabela">
+                    <table>
+                        <thead>
+                            <tr><th>Data</th><th>Obra</th><th>Serviço</th><th>Área</th><th>Produtividade</th></tr>
+                        </thead>
+                        <tbody id="registros"><tr><td colspan="5">Carregando...</td></tr></tbody>
+                    </table>
+                </div>
+            </article>
+
+            <article class="painel">
+                <h2>Simular previsão</h2>
+                <form id="form-previsao">
+                    {% csrf_token %}
+                    <label><span>Área</span><input name="area" type="number" step="0.01" value="150" required></label>
+                    <label><span>Horas</span><input name="horas" type="number" step="0.01" value="8" required></label>
+                    <label><span>Condição</span><select name="condicao"><option value="1">Ruim</option><option value="2">Regular</option><option value="3" selected>Boa</option></select></label>
+                    <label><span>Equipe</span><select name="equipe" id="equipe" required></select></label>
+                    <label><span>Serviço</span><select name="servico" id="servico" required></select></label>
+                    <label><span>Obra</span><select name="obra" id="obra" required></select></label>
+                    <label><span>Equipamento</span><select name="equipamento" id="equipamento"><option value="">Nenhum</option></select></label>
+                    <label><span>Horas do equipamento</span><input name="horas_equipamento" type="number" step="0.01" value="6"></label>
+                    <label><span>Tempo ocioso</span><input name="tempo_ocioso" type="number" step="0.01" value="0.5"></label>
+                    <button type="submit">Calcular previsão</button>
+                </form>
+                <div id="resultado" role="status"></div>
+            </article>
+        </section>
+
+        <p class="links">Acesso técnico: <a href="/api/">API</a> · <a href="/admin/">Administração</a></p>
+    </main>
+
+    <script>
+        const formatar = (valor) => Number(valor || 0).toLocaleString("pt-BR", { maximumFractionDigits: 2 });
+
+        async function obter(url) {
+            const resposta = await fetch(url);
+            if (!resposta.ok) throw new Error("Não foi possível carregar os dados.");
+            return resposta.json();
+        }
+
+        function preencherSelect(id, itens, rotulo) {
+            const select = document.getElementById(id);
+            itens.forEach((item) => {
+                const option = document.createElement("option");
+                option.value = item.id;
+                option.textContent = rotulo(item);
+                select.appendChild(option);
+            });
+        }
+
+        async function carregarPainel() {
+            try {
+                const [resumo, registros, equipes, servicos, obras, equipamentos] = await Promise.all([
+                    obter("/api/resumo/"), obter("/api/registros/"), obter("/api/equipes/"),
+                    obter("/api/servicos/"), obter("/api/obras/"), obter("/api/equipamentos/")
+                ]);
+                document.getElementById("total-registros").textContent = resumo.total_registros;
+                document.getElementById("area-total").textContent = `${formatar(resumo.area_total)} m²`;
+                document.getElementById("horas-totais").textContent = `${formatar(resumo.horas_totais)} h`;
+                document.getElementById("produtividade-media").textContent = formatar(resumo.produtividade_media);
+
+                const nomesObras = Object.fromEntries(obras.map((item) => [item.id, item.nome]));
+                const nomesServicos = Object.fromEntries(servicos.map((item) => [item.id, item.nome]));
+                const corpo = document.getElementById("registros");
+                corpo.replaceChildren();
+                registros.slice(0, 6).forEach((registro) => {
+                    const linha = document.createElement("tr");
+                    [registro.data, nomesObras[registro.obra], nomesServicos[registro.servico], formatar(registro.area), formatar(registro.produtividade)]
+                        .forEach((valor) => {
+                            const celula = document.createElement("td");
+                            celula.textContent = valor;
+                            linha.appendChild(celula);
+                        });
+                    corpo.appendChild(linha);
+                });
+
+                preencherSelect("equipe", equipes, (item) => item.nome);
+                preencherSelect("servico", servicos, (item) => item.nome);
+                preencherSelect("obra", obras, (item) => item.nome);
+                preencherSelect("equipamento", equipamentos, (item) => `${item.identificador} - ${item.nome}`);
+            } catch (erro) {
+                document.getElementById("registros").innerHTML = `<tr><td colspan="5">${erro.message}</td></tr>`;
+            }
+        }
+
+        document.getElementById("form-previsao").addEventListener("submit", async (evento) => {
+            evento.preventDefault();
+            const formulario = new FormData(evento.currentTarget);
+            const dados = Object.fromEntries(formulario.entries());
+            if (!dados.equipamento) delete dados.equipamento;
+            const resultado = document.getElementById("resultado");
+            resultado.style.display = "block";
+            resultado.textContent = "Calculando...";
+
+            const resposta = await fetch("/api/prever/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": formulario.get("csrfmiddlewaretoken")
+                },
+                body: JSON.stringify(dados)
+            });
+            const conteudo = await resposta.json();
+            resultado.textContent = resposta.ok
+                ? `Produtividade prevista: ${formatar(conteudo.produtividade_prevista)} (erro médio: ${formatar(conteudo.erro_medio)})`
+                : (conteudo.erro || "Confira os dados informados.");
+        });
+
+        carregarPainel();
+    </script>
+</body>
+</html>
