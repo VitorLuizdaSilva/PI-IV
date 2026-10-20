@@ -1,7 +1,11 @@
+
 from django.db.models import Avg, Count, Sum
 from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+
 from rest_framework import status, viewsets
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .ml import prever_produtividade
@@ -24,6 +28,7 @@ from .serializers import (
 )
 
 
+@login_required(login_url="login")
 def dashboard(request):
     return render(request, "produtividade/dashboard.html")
 
@@ -31,21 +36,25 @@ def dashboard(request):
 class EquipeViewSet(viewsets.ModelViewSet):
     queryset = Equipe.objects.all().order_by("nome")
     serializer_class = EquipeSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class ObraViewSet(viewsets.ModelViewSet):
     queryset = Obra.objects.all().order_by("nome")
     serializer_class = ObraSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class ServicoViewSet(viewsets.ModelViewSet):
     queryset = Servico.objects.all().order_by("nome")
     serializer_class = ServicoSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class EquipamentoViewSet(viewsets.ModelViewSet):
     queryset = Equipamento.objects.all().order_by("identificador")
     serializer_class = EquipamentoSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class RegistroProdutividadeViewSet(viewsets.ModelViewSet):
@@ -56,6 +65,7 @@ class RegistroProdutividadeViewSet(viewsets.ModelViewSet):
         "equipamento",
     ).order_by("-data", "-id")
     serializer_class = RegistroProdutividadeSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class RegistroTelemetriaViewSet(viewsets.ModelViewSet):
@@ -64,9 +74,11 @@ class RegistroTelemetriaViewSet(viewsets.ModelViewSet):
         "equipamento",
     ).order_by("-registrado_em")
     serializer_class = RegistroTelemetriaSerializer
+    permission_classes = [IsAuthenticated]
 
 
 @api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def prever(request):
     serializer = PrevisaoSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -94,6 +106,7 @@ def prever(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def resumo(request):
     indicadores = RegistroProdutividade.objects.aggregate(
         total_registros=Count("id"),
@@ -104,9 +117,7 @@ def resumo(request):
     )
 
     for campo, valor in indicadores.items():
-        if campo == "total_registros":
-            indicadores[campo] = valor
-        else:
+        if campo != "total_registros":
             indicadores[campo] = round(valor or 0, 2)
 
     indicadores["total_obras"] = Obra.objects.count()

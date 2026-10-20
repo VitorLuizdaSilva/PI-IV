@@ -6,6 +6,9 @@ from django.contrib.auth.decorators import login_required
 
 
 def cadastro(request):
+    if request.user.is_authenticated:
+        return redirect("dashboard")
+
     if request.method == "POST":
         formulario = UserCreationForm(request.POST)
 
@@ -24,6 +27,9 @@ def cadastro(request):
 
 
 def entrar(request):
+    if request.user.is_authenticated:
+        return redirect("dashboard")
+
     if request.method == "POST":
         formulario = AuthenticationForm(
             request,
@@ -44,8 +50,10 @@ def entrar(request):
     )
 
 
+@login_required(login_url="login")
 def sair(request):
     if request.method == "POST":
         logout(request)
+        return redirect("login")
 
-    return redirect("login")
+    return redirect("dashboard")

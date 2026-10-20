@@ -99,20 +99,14 @@ WSGI_APPLICATION = 'projeto.wsgi.application'
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "produtividade_obra",
+        "USER": "postgres",
+        "PASSWORD": "admin",
+        "HOST": "localhost",
+        "PORT": "5432",
     }
 }
-'''"default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": obter_variavel("DB_NAME"),
-        "USER": obter_variavel("DB_USER"),
-        "PASSWORD": obter_variavel("DB_PASSWORD"),
-        "HOST": obter_variavel("DB_HOST"),
-        "PORT": obter_variavel("DB_PORT"),
-        "CONN_MAX_AGE": 60,
-    }'''
-
 
 
 # Password validation

@@ -21,7 +21,7 @@ router.register("registros", RegistroProdutividadeViewSet)
 router.register("telemetria", RegistroTelemetriaViewSet)
 
 urlpatterns = [
-    path("dashboard/", include(router.urls)),
+    path("", include(router.urls)),
     path("prever/", prever, name="prever"),
     path("resumo/", resumo, name="resumo"),
 ]
