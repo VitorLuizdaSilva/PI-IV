@@ -109,7 +109,7 @@
     <main>
         <nav class="abas" aria-label="Navegação do painel">
             <button type="button" class="ativa" data-aba="aba-painel">
-                Painel atual
+                Previsão
             </button>
             <button type="button" data-aba="aba-historico">
                 Histórico mensal
@@ -141,7 +141,7 @@
                     </div>
                 </article>
 
-                <article class="painel">
+                <article class="previsao painel">
                     <h2>Simular previsão</h2>
                     <form id="form-previsao">
                         {% csrf_token %}
@@ -167,7 +167,7 @@
             </section>
         </section>
 
-        <!-- ABA: histórico mensal -->
+       
         <section id="aba-historico" class="aba-conteudo" hidden>
             <article class="painel">
                 <h2>Histórico mensal</h2>
@@ -181,7 +181,7 @@
             </article>
         </section>
         
-        <!-- ABA: Novo apontamento -->
+        
         <section id="aba-apontamento" class="aba-conteudo" hidden>
             <article class="painel">
                 <h2>Novo apontamento</h2>
@@ -234,7 +234,7 @@
             return conteudo;
         }
 
-        // Compatível tanto com APIs que retornam uma lista quanto com paginação DRF.
+       
         function extrairLista(dados) {
             if (Array.isArray(dados)) return dados;
             if (dados && Array.isArray(dados.results)) return dados.results;
@@ -277,8 +277,7 @@
         async function carregarPainel() {
             const corpo = document.getElementById("registros");
             try {
-                // Carrega cada endpoint separadamente para descobrir qual falhou,
-                // sem esconder todos os dados caso apenas um endpoint tenha problema.
+                
                 const resultados = await Promise.allSettled([
                     obter("/api/resumo/"),
                     obter("/api/registros/"),
@@ -436,7 +435,7 @@
             }
         });
 
-        // Envia o novo apontamento ao Django REST Framework.
+        
         document.getElementById("form-apontamento").addEventListener("submit", async (evento) => {
             evento.preventDefault();
 
