@@ -1,0 +1,78 @@
+
+<article class="painel">
+    <h2>Novo apontamento de produtividade</h2>
+
+    <p>Preencha os dados da atividade executada na obra.</p>
+
+    <form id="form-apontamento">
+        {% csrf_token %}
+
+        <label>
+            <span>Obra</span>
+            <select name="obra" id="ap-obra" required>
+                <option value="">Selecione uma obra</option>
+            </select>
+        </label>
+
+        <label>
+            <span>Equipe</span>
+            <select name="equipe" id="ap-equipe" required>
+                <option value="">Selecione uma equipe</option>
+            </select>
+        </label>
+
+        <label>
+            <span>Serviço</span>
+            <select name="servico" id="ap-servico" required>
+                <option value="">Selecione um serviço</option>
+            </select>
+        </label>
+
+        <label>
+            <span>Equipamento</span>
+            <select name="equipamento" id="ap-equipamento">
+                <option value="">Nenhum</option>
+            </select>
+        </label>
+
+        <label>
+            <span>Área produzida (m²)</span>
+            <input type="number" name="area" min="0.01"
+                   step="0.01" required>
+        </label>
+
+        <label>
+            <span>Horas trabalhadas</span>
+            <input type="number" name="horas_trabalhadas"
+                   min="0.01" step="0.01" required>
+        </label>
+
+        <label>
+            <span>Condição de trabalho</span>
+            <select name="condicao_trabalho" required>
+                <option value="">Selecione</option>
+                <option value="1">Ruim</option>
+                <option value="2">Regular</option>
+                <option value="3">Boa</option>
+            </select>
+        </label>
+
+        <label>
+            <span>Horas do equipamento</span>
+            <input type="number" name="horas_equipamento"
+                   min="0" step="0.01">
+        </label>
+
+        <label>
+            <span>Tempo ocioso</span>
+            <input type="number" name="tempo_ocioso"
+                   min="0" step="0.01">
+        </label>
+
+        <button type="submit" id="btn-salvar-apontamento">
+            Salvar apontamento
+        </button>
+    </form>
+
+    <p id="mensagem-apontamento" role="status"></p>
+</article>

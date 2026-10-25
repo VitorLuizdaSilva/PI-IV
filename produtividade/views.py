@@ -2,11 +2,15 @@
 from django.db.models import Avg, Count, Sum
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from decimal import Decimal
+from datetime import date
 
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework import status
+from django.utils import timezone
 
 from .ml import prever_produtividade
 from .models import (
@@ -16,6 +20,8 @@ from .models import (
     RegistroProdutividade,
     RegistroTelemetria,
     Servico,
+    HistoricoPrevisao,
+    FechamentoMensal,
 )
 from .serializers import (
     EquipamentoSerializer,
@@ -28,7 +34,7 @@ from .serializers import (
 )
 
 
-@login_required(login_url="login")
+@login_required
 def dashboard(request):
     return render(request, "produtividade/dashboard.html")
 
@@ -82,6 +88,7 @@ class RegistroTelemetriaViewSet(viewsets.ModelViewSet):
 def prever(request):
     serializer = PrevisaoSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
+
     dados = serializer.validated_data
 
     try:
@@ -102,8 +109,50 @@ def prever(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    return Response(resultado)
+    
+    produtividade = resultado.get("produtividade_prevista")
+    erro_medio = resultado.get("erro_medio")
 
+    if produtividade is None:
+        return Response(
+            {
+                "erro": (
+                    "A previsão foi calculada, mas a função "
+                    "prever_produtividade não retornou "
+                    "'produtividade_prevista'."
+                )
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    
+    historico = HistoricoPrevisao.objects.create(
+        obra=dados["obra"],
+        equipe=dados["equipe"],
+        servico=dados["servico"],
+        equipamento=dados.get("equipamento"),
+        area=dados["area"],
+        horas=dados["horas"],
+        condicao=dados["condicao"],
+        horas_equipamento=dados["horas_equipamento"],
+        tempo_ocioso=dados["tempo_ocioso"],
+        produtividade_prevista=Decimal(str(produtividade)),
+        erro_medio=(
+            Decimal(str(erro_medio))
+            if erro_medio is not None
+            else None
+        ),
+    )
+
+    return Response(
+        {
+            **resultado,
+            "id": historico.id,
+            "salvo": True,
+            "criado_em": historico.criado_em,
+        },
+        status=status.HTTP_201_CREATED,
+    )
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -125,3 +174,185 @@ def resumo(request):
     indicadores["total_equipamentos"] = Equipamento.objects.count()
 
     return Response(indicadores)
+
+def proximo_mes(mes):
+   
+    if mes.month == 12:
+        return date(mes.year + 1, 1, 1)
+
+    return date(mes.year, mes.month + 1, 1)
+
+
+def calcular_totais_mensais(inicio, fim):
+    
+    registros = RegistroProdutividade.objects.filter(
+        data__gte=inicio,
+        data__lt=fim,
+    )
+
+    totais = registros.aggregate(
+        total_registros=Count("id"),
+        area_total=Sum("area"),
+        horas_totais=Sum("horas_trabalhadas"),
+        produtividade_media=Avg("produtividade"),
+    )
+
+    return {
+        "total_registros": totais["total_registros"] or 0,
+        "area_total": totais["area_total"] or Decimal("0"),
+        "horas_totais": totais["horas_totais"] or Decimal("0"),
+        "produtividade_media": (
+            totais["produtividade_media"] or Decimal("0")
+        ),
+    }
+
+
+def fechar_meses_anteriores():
+    """
+    Salva o resumo dos meses anteriores ao mês atual.
+    Não exclui nem modifica os registros originais.
+    """
+    hoje = timezone.localdate()
+    mes_atual = date(hoje.year, hoje.month, 1)
+
+    primeira_data = (
+        RegistroProdutividade.objects
+        .order_by("data")
+        .values_list("data", flat=True)
+        .first()
+    )
+
+    if primeira_data is None:
+        return
+
+    mes = date(primeira_data.year, primeira_data.month, 1)
+
+    while mes < mes_atual:
+        fim = proximo_mes(mes)
+
+        totais = calcular_totais_mensais(mes, fim)
+
+        FechamentoMensal.objects.get_or_create(
+            mes=mes,
+            defaults=totais,
+        )
+
+        mes = fim
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def meses(request):
+   
+    fechar_meses_anteriores()
+
+    hoje = timezone.localdate()
+    inicio_atual = date(hoje.year, hoje.month, 1)
+    fim_atual = proximo_mes(inicio_atual)
+
+    fechamento_atual = calcular_totais_mensais(
+        inicio_atual,
+        fim_atual,
+    )
+
+    historico = list(
+        FechamentoMensal.objects.all().values(
+            "mes",
+            "total_registros",
+            "area_total",
+            "horas_totais",
+            "produtividade_media",
+        )
+    )
+
+   
+    historico.insert(
+        0,
+        {
+            "mes": inicio_atual,
+            **fechamento_atual,
+            "atual": True,
+        },
+    )
+
+    return Response(historico)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def detalhes_mes(request, ano, mes):
+    """
+    Retorna os indicadores, apontamentos reais e previsões de um mês.
+    """
+    if mes < 1 or mes > 12:
+        return Response(
+            {"erro": "Mês inválido."},
+            status=400,
+        )
+
+    inicio = date(ano, mes, 1)
+    fim = proximo_mes(inicio)
+
+    totais = calcular_totais_mensais(inicio, fim)
+
+    registros = list(
+        RegistroProdutividade.objects
+        .filter(data__gte=inicio, data__lt=fim)
+        .select_related("obra", "servico", "equipe", "equipamento")
+        .order_by("data", "id")
+        .values(
+            "id",
+            "data",
+            "obra__nome",
+            "servico__nome",
+            "equipe__nome",
+            "equipamento__nome",
+            "area",
+            "horas_trabalhadas",
+            "produtividade",
+        )
+    )
+
+    previsoes = list(
+        HistoricoPrevisao.objects
+        .filter(criado_em__date__gte=inicio, criado_em__date__lt=fim)
+        .select_related("obra", "servico", "equipe", "equipamento")
+        .order_by("-criado_em")
+        .values(
+            "id",
+            "criado_em",
+            "obra__nome",
+            "servico__nome",
+            "equipe__nome",
+            "equipamento__nome",
+            "area",
+            "horas",
+            "produtividade_prevista",
+            "erro_medio",
+        )
+    )
+
+    return Response({
+        "mes": inicio,
+        "totais": totais,
+        "registros": registros,
+        "previsoes": previsoes,
+    })
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def criar_apontamento(request):
+    serializer = RegistroProdutividadeSerializer(data=request.data)
+
+    if serializer.is_valid():
+        registro = serializer.save()
+        return Response(
+            RegistroProdutividadeSerializer(registro).data,
+            status=status.HTTP_201_CREATED,
+        )
+    
+    return Response(
+        serializer.errors,
+        status=status.HTTP_400_BAD_REQUEST,
+    )

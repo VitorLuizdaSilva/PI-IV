@@ -69,22 +69,35 @@
             font-weight: 700;
         }
         button:hover { filter: brightness(.94); }
+        button:disabled { opacity: .65; cursor: wait; }
         #resultado {
             display: none;
             margin-top: 16px;
             padding: 14px;
             border-radius: 8px;
             background: var(--azul-claro);
+            overflow-wrap: anywhere;
         }
         .links { margin-top: 22px; color: var(--cinza); }
         .links a { color: var(--azul); }
-        @media (max-width: 800px) {
-            .grade { grid-template-columns: 1fr; }
-            .tabela { overflow-x: auto; }
+        .abas { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 22px; }
+        .abas button {
+            width: auto;
+            flex: 1;
+            min-width: 150px;
+            grid-column: auto;
+            background: white;
+            color: var(--azul);
+            border: 1px solid var(--borda);
         }
-        @media (max-width: 480px) {
-            form { grid-template-columns: 1fr; }
-        }
+        .abas button.ativa { background: var(--azul); color: white; }
+        .aba-conteudo { margin-bottom: 22px; }
+        .aba-conteudo[hidden] { display: none !important; }
+        .botao-detalhes { width: auto; padding: 7px 12px; background: var(--azul); color: white; margin-top: 12px; }
+        .mensagem { padding: 12px; background: var(--azul-claro); border-radius: 8px; margin-bottom: 14px; }
+        .tabela { overflow-x: auto; }
+        @media (max-width: 800px) { .grade { grid-template-columns: 1fr; } }
+        @media (max-width: 480px) { form { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -94,123 +107,541 @@
     </header>
 
     <main>
-        <section class="cards" aria-label="Indicadores gerais">
-            <article class="card"><span>Registros</span><strong id="total-registros">-</strong></article>
-            <article class="card"><span>Área produzida</span><strong id="area-total">-</strong></article>
-            <article class="card"><span>Horas trabalhadas</span><strong id="horas-totais">-</strong></article>
-            <article class="card"><span>Produtividade média</span><strong id="produtividade-media">-</strong></article>
+        <nav class="abas" aria-label="Navegação do painel">
+            <button type="button" class="ativa" data-aba="aba-painel">
+                Painel atual
+            </button>
+            <button type="button" data-aba="aba-historico">
+                Histórico mensal
+            </button>
+
+            <button type="button" data-aba="aba-apontamento">
+                Novo apontamento
+            </button>
+        </nav>
+        
+        <section id="aba-painel" class="aba-conteudo">
+            <section class="cards" aria-label="Indicadores gerais">
+                <article class="card"><span>Registros</span><strong id="total-registros">-</strong></article>
+                <article class="card"><span>Área produzida</span><strong id="area-total">-</strong></article>
+                <article class="card"><span>Horas trabalhadas</span><strong id="horas-totais">-</strong></article>
+                <article class="card"><span>Produtividade média</span><strong id="produtividade-media">-</strong></article>
+            </section>
+
+            <section class="grade">
+                <article class="painel">
+                    <h2>Últimos apontamentos</h2>
+                    <div class="tabela">
+                        <table>
+                            <thead>
+                                <tr><th>Data</th><th>Obra</th><th>Serviço</th><th>Área</th><th>Produtividade</th></tr>
+                            </thead>
+                            <tbody id="registros"><tr><td colspan="5">Carregando...</td></tr></tbody>
+                        </table>
+                    </div>
+                </article>
+
+                <article class="painel">
+                    <h2>Simular previsão</h2>
+                    <form id="form-previsao">
+                        {% csrf_token %}
+                        <label><span>Área</span><input name="area" type="number" min="0.01" step="0.01" value="150" required></label>
+                        <label><span>Horas</span><input name="horas" type="number" min="0.01" step="0.01" value="8" required></label>
+                        <label><span>Condição</span>
+                            <select name="condicao" required>
+                                <option value="1">Ruim</option><option value="2">Regular</option><option value="3" selected>Boa</option>
+                            </select>
+                        </label>
+                        <label><span>Equipe</span><select name="equipe" id="equipe" required><option value="">Carregando...</option></select></label>
+                        <label><span>Serviço</span><select name="servico" id="servico" required><option value="">Carregando...</option></select></label>
+                        <label><span>Obra</span><select name="obra" id="obra" required><option value="">Carregando...</option></select></label>
+                        <label><span>Equipamento</span>
+                            <select name="equipamento" id="equipamento"><option value="">Nenhum</option></select>
+                        </label>
+                        <label><span>Horas do equipamento</span><input name="horas_equipamento" type="number" min="0" step="0.01" value="6"></label>
+                        <label><span>Tempo ocioso</span><input name="tempo_ocioso" type="number" min="0" step="0.01" value="0.5"></label>
+                        <button id="btn-prever" type="submit">Calcular previsão</button>
+                    </form>
+                    <div id="resultado" role="status" aria-live="polite"></div>
+                </article>
+            </section>
         </section>
 
-        <section class="grade">
+        <!-- ABA: histórico mensal -->
+        <section id="aba-historico" class="aba-conteudo" hidden>
             <article class="painel">
-                <h2>Últimos apontamentos</h2>
-                <div class="tabela">
-                    <table>
-                        <thead>
-                            <tr><th>Data</th><th>Obra</th><th>Serviço</th><th>Área</th><th>Produtividade</th></tr>
-                        </thead>
-                        <tbody id="registros"><tr><td colspan="5">Carregando...</td></tr></tbody>
-                    </table>
-                </div>
-            </article>
-
-            <article class="painel">
-                <h2>Simular previsão</h2>
-                <form id="form-previsao">
-                    {% csrf_token %}
-                    <label><span>Área</span><input name="area" type="number" step="0.01" value="150" required></label>
-                    <label><span>Horas</span><input name="horas" type="number" step="0.01" value="8" required></label>
-                    <label><span>Condição</span><select name="condicao"><option value="1">Ruim</option><option value="2">Regular</option><option value="3" selected>Boa</option></select></label>
-                    <label><span>Equipe</span><select name="equipe" id="equipe" required></select></label>
-                    <label><span>Serviço</span><select name="servico" id="servico" required></select></label>
-                    <label><span>Obra</span><select name="obra" id="obra" required></select></label>
-                    <label><span>Equipamento</span><select name="equipamento" id="equipamento"><option value="">Nenhum</option></select></label>
-                    <label><span>Horas do equipamento</span><input name="horas_equipamento" type="number" step="0.01" value="6"></label>
-                    <label><span>Tempo ocioso</span><input name="tempo_ocioso" type="number" step="0.01" value="0.5"></label>
-                    <button type="submit">Calcular previsão</button>
-                </form>
-                <div id="resultado" role="status"></div>
+                <h2>Histórico mensal</h2>
+                <p>Selecione um período para consultar os totais, os apontamentos reais e as previsões calculadas.</p>
+                <label>
+                    <span>Mês disponível</span>
+                    <select id="mes-selecionado"><option value="">Carregando meses...</option></select>
+                </label>
+                <button type="button" id="btn-detalhes-mes" class="botao-detalhes">Ver detalhes do mês</button>
+                <div id="detalhes-mes" style="margin-top: 22px;"></div>
             </article>
         </section>
+        
+        <!-- ABA: Novo apontamento -->
+        <section id="aba-apontamento" class="aba-conteudo" hidden>
+            <article class="painel">
+                <h2>Novo apontamento</h2>
+
+                {% include "produtividade/abas/novo_apontamento.html" %}
+            </article>
+        </section>
+
 
         <p class="links">Acesso técnico: <a href="/api/">API</a> · <a href="/admin/">Administração</a></p>
     </main>
 
     <script>
-        const formatar = (valor) => Number(valor || 0).toLocaleString("pt-BR", { maximumFractionDigits: 2 });
+        const formatar = (valor) => {
+            if (valor === null || valor === undefined || valor === "") return "-";
+            const numero = Number(valor);
+            return Number.isFinite(numero)
+                ? numero.toLocaleString("pt-BR", { maximumFractionDigits: 2 })
+                : String(valor);
+        };
 
-        async function obter(url) {
-            const resposta = await fetch(url);
-            if (!resposta.ok) throw new Error("Não foi possível carregar os dados.");
-            return resposta.json();
+        async function obter(url, opcoes = {}) {
+            const resposta = await fetch(url, {
+                credentials: "same-origin",
+                ...opcoes,
+                headers: {
+                    "Accept": "application/json",
+                    ...(opcoes.headers || {})
+                }
+            });
+
+            const tipo = resposta.headers.get("content-type") || "";
+            let conteudo;
+            if (tipo.includes("application/json")) {
+                conteudo = await resposta.json();
+            } else {
+                conteudo = await resposta.text();
+            }
+
+            if (!resposta.ok) {
+                const detalhe = typeof conteudo === "string"
+                    ? conteudo.slice(0, 180)
+                    : (conteudo.detail || conteudo.erro || JSON.stringify(conteudo));
+                throw new Error(`${url} retornou HTTP ${resposta.status}: ${detalhe}`);
+            }
+
+            if (typeof conteudo === "string") {
+                throw new Error(`${url} não retornou JSON. Pode ter ocorrido redirecionamento para o login.`);
+            }
+            return conteudo;
         }
 
-        function preencherSelect(id, itens, rotulo) {
+        // Compatível tanto com APIs que retornam uma lista quanto com paginação DRF.
+        function extrairLista(dados) {
+            if (Array.isArray(dados)) return dados;
+            if (dados && Array.isArray(dados.results)) return dados.results;
+            return [];
+        }
+
+        function preencherSelect(id, itens, rotulo, textoVazio = "Nenhuma opção disponível") {
             const select = document.getElementById(id);
+            const valorAnterior = select.value;
+            select.replaceChildren();
+
+            const inicial = document.createElement("option");
+            inicial.value = "";
+            inicial.textContent = textoVazio;
+            select.appendChild(inicial);
+
             itens.forEach((item) => {
                 const option = document.createElement("option");
                 option.value = item.id;
                 option.textContent = rotulo(item);
                 select.appendChild(option);
             });
+
+            if (itens.some((item) => String(item.id) === valorAnterior)) {
+                select.value = valorAnterior;
+            }
+        }
+
+        function mostrarErroTabela(mensagem) {
+            const corpo = document.getElementById("registros");
+            corpo.replaceChildren();
+            const linha = document.createElement("tr");
+            const celula = document.createElement("td");
+            celula.colSpan = 5;
+            celula.textContent = mensagem;
+            linha.appendChild(celula);
+            corpo.appendChild(linha);
         }
 
         async function carregarPainel() {
+            const corpo = document.getElementById("registros");
             try {
-                const [resumo, registros, equipes, servicos, obras, equipamentos] = await Promise.all([
-                    obter("/api/resumo/"), obter("/api/registros/"), obter("/api/equipes/"),
-                    obter("/api/servicos/"), obter("/api/obras/"), obter("/api/equipamentos/")
+                // Carrega cada endpoint separadamente para descobrir qual falhou,
+                // sem esconder todos os dados caso apenas um endpoint tenha problema.
+                const resultados = await Promise.allSettled([
+                    obter("/api/resumo/"),
+                    obter("/api/registros/"),
+                    obter("/api/equipes/"),
+                    obter("/api/servicos/"),
+                    obter("/api/obras/"),
+                    obter("/api/equipamentos/")
                 ]);
-                document.getElementById("total-registros").textContent = resumo.total_registros;
-                document.getElementById("area-total").textContent = `${formatar(resumo.area_total)} m²`;
-                document.getElementById("horas-totais").textContent = `${formatar(resumo.horas_totais)} h`;
-                document.getElementById("produtividade-media").textContent = formatar(resumo.produtividade_media);
 
-                const nomesObras = Object.fromEntries(obras.map((item) => [item.id, item.nome]));
-                const nomesServicos = Object.fromEntries(servicos.map((item) => [item.id, item.nome]));
-                const corpo = document.getElementById("registros");
-                corpo.replaceChildren();
-                registros.slice(0, 6).forEach((registro) => {
-                    const linha = document.createElement("tr");
-                    [registro.data, nomesObras[registro.obra], nomesServicos[registro.servico], formatar(registro.area), formatar(registro.produtividade)]
-                        .forEach((valor) => {
-                            const celula = document.createElement("td");
-                            celula.textContent = valor;
-                            linha.appendChild(celula);
-                        });
-                    corpo.appendChild(linha);
+                const nomes = ["resumo", "registros", "equipes", "serviços", "obras", "equipamentos"];
+                resultados.forEach((resultado, indice) => {
+                    if (resultado.status === "rejected") {
+                        console.error(`Erro ao carregar ${nomes[indice]}:`, resultado.reason);
+                    }
                 });
 
-                preencherSelect("equipe", equipes, (item) => item.nome);
-                preencherSelect("servico", servicos, (item) => item.nome);
-                preencherSelect("obra", obras, (item) => item.nome);
-                preencherSelect("equipamento", equipamentos, (item) => `${item.identificador} - ${item.nome}`);
+                const [rResumo, rRegistros, rEquipes, rServicos, rObras, rEquipamentos] = resultados;
+
+                if (rResumo.status === "fulfilled") {
+                    const resumo = rResumo.value;
+                    document.getElementById("total-registros").textContent = formatar(resumo.total_registros);
+                    document.getElementById("area-total").textContent = `${formatar(resumo.area_total)} m²`;
+                    document.getElementById("horas-totais").textContent = `${formatar(resumo.horas_totais)} h`;
+                    document.getElementById("produtividade-media").textContent = formatar(resumo.produtividade_media);
+                } else {
+                    document.getElementById("total-registros").textContent = "Erro";
+                    document.getElementById("area-total").textContent = "Erro";
+                    document.getElementById("horas-totais").textContent = "Erro";
+                    document.getElementById("produtividade-media").textContent = "Erro";
+                }
+
+                if (rRegistros.status === "fulfilled" && rObras.status === "fulfilled" && rServicos.status === "fulfilled") {
+                    const registros = extrairLista(rRegistros.value);
+                    const obras = extrairLista(rObras.value);
+                    const servicos = extrairLista(rServicos.value);
+                    const nomesObras = Object.fromEntries(obras.map((item) => [item.id, item.nome]));
+                    const nomesServicos = Object.fromEntries(servicos.map((item) => [item.id, item.nome]));
+
+                    corpo.replaceChildren();
+                    const recentes = registros.slice(0, 6);
+
+                    if (!recentes.length) {
+                        mostrarErroTabela("Nenhum apontamento de produtividade encontrado.");
+                    } else {
+                        recentes.forEach((registro) => {
+                            const linha = document.createElement("tr");
+                            const valores = [
+                                registro.data ?? "-",
+                                nomesObras[registro.obra] ?? registro.obra__nome ?? "-",
+                                nomesServicos[registro.servico] ?? registro.servico__nome ?? "-",
+                                formatar(registro.area),
+                                formatar(registro.produtividade)
+                            ];
+                            valores.forEach((valor) => {
+                                const celula = document.createElement("td");
+                                celula.textContent = valor;
+                                linha.appendChild(celula);
+                            });
+                            corpo.appendChild(linha);
+                        });
+                    }
+                } else {
+                    const falhas = [];
+                    if (rRegistros.status === "rejected") falhas.push("registros");
+                    if (rObras.status === "rejected") falhas.push("obras");
+                    if (rServicos.status === "rejected") falhas.push("serviços");
+                    mostrarErroTabela(`Falha ao carregar ${falhas.join(", ")}. Veja o Console (F12) para o detalhe.`);
+                }
+
+                if (rEquipes.status === "fulfilled") {
+                    preencherSelect("equipe", extrairLista(rEquipes.value), (item) => item.nome);
+                } else {
+                    preencherSelect("equipe", [], (item) => item.nome, "Erro ao carregar equipes");
+                }
+
+                if (rServicos.status === "fulfilled") {
+                    preencherSelect("servico", extrairLista(rServicos.value), (item) => item.nome);
+                } else {
+                    preencherSelect("servico", [], (item) => item.nome, "Erro ao carregar serviços");
+                }
+
+                if (rObras.status === "fulfilled") {
+                    preencherSelect("obra", extrairLista(rObras.value), (item) => item.nome);
+                } else {
+                    preencherSelect("obra", [], (item) => item.nome, "Erro ao carregar obras");
+                }
+
+                if (rEquipamentos.status === "fulfilled") {
+                    preencherSelect(
+                        "equipamento",
+                        extrairLista(rEquipamentos.value),
+                        (item) => `${item.identificador || ""}${item.nome ? " - " + item.nome : ""}`.trim() || `Equipamento ${item.id}`
+                    );
+                } else {
+                    preencherSelect("equipamento", [], (item) => item.nome, "Erro ao carregar equipamentos");
+                }
+
+                // Preenche também os selects do formulário de novo apontamento.
+                if (rObras.status === "fulfilled") {
+                    preencherSelect("ap-obra", extrairLista(rObras.value), (item) => item.nome, "Selecione uma obra");
+                }
+                if (rEquipes.status === "fulfilled") {
+                    preencherSelect("ap-equipe", extrairLista(rEquipes.value), (item) => item.nome, "Selecione uma equipe");
+                }
+                if (rServicos.status === "fulfilled") {
+                    preencherSelect("ap-servico", extrairLista(rServicos.value), (item) => item.nome, "Selecione um serviço");
+                }
+                if (rEquipamentos.status === "fulfilled") {
+                    preencherSelect(
+                        "ap-equipamento",
+                        extrairLista(rEquipamentos.value),
+                        (item) => `${item.identificador || ""}${item.nome ? " - " + item.nome : ""}`.trim() || `Equipamento ${item.id}`,
+                        "Nenhum equipamento"
+                    );
+                }
             } catch (erro) {
-                document.getElementById("registros").innerHTML = `<tr><td colspan="5">${erro.message}</td></tr>`;
+                console.error("Erro inesperado ao carregar o painel:", erro);
+                mostrarErroTabela(`Erro ao carregar o painel: ${erro.message}`);
             }
         }
 
         document.getElementById("form-previsao").addEventListener("submit", async (evento) => {
             evento.preventDefault();
-            const formulario = new FormData(evento.currentTarget);
-            const dados = Object.fromEntries(formulario.entries());
+            const formulario = evento.currentTarget;
+            const dadosFormulario = new FormData(formulario);
+            const dados = Object.fromEntries(dadosFormulario.entries());
             if (!dados.equipamento) delete dados.equipamento;
-            const resultado = document.getElementById("resultado");
-            resultado.style.display = "block";
-            resultado.textContent = "Calculando...";
 
-            const resposta = await fetch("/api/prever/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": formulario.get("csrfmiddlewaretoken")
-                },
-                body: JSON.stringify(dados)
+            const resultado = document.getElementById("resultado");
+            const botao = document.getElementById("btn-prever");
+            resultado.style.display = "block";
+            resultado.textContent = "Calculando previsão...";
+            botao.disabled = true;
+
+            try {
+                const conteudo = await obter("/api/prever/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": dadosFormulario.get("csrfmiddlewaretoken") || ""
+                    },
+                    body: JSON.stringify(dados)
+                });
+
+                resultado.textContent =
+                    `Produtividade prevista: ${formatar(conteudo.produtividade_prevista)} ` +
+                    `(erro médio: ${formatar(conteudo.erro_medio)}). Previsão salva no histórico.`;
+
+                await carregarMeses();
+            } catch (erro) {
+                console.error("Erro ao calcular previsão:", erro);
+                resultado.textContent = `Não foi possível calcular a previsão: ${erro.message}`;
+            } finally {
+                botao.disabled = false;
+            }
+        });
+
+        // Envia o novo apontamento ao Django REST Framework.
+        document.getElementById("form-apontamento").addEventListener("submit", async (evento) => {
+            evento.preventDefault();
+
+            const formulario = evento.currentTarget;
+            const dadosFormulario = new FormData(formulario);
+            const dados = Object.fromEntries(dadosFormulario.entries());
+            const mensagem = document.getElementById("mensagem-apontamento");
+            const botao = document.getElementById("btn-salvar-apontamento");
+
+            dados.obra = Number(dados.obra);
+            dados.equipe = Number(dados.equipe);
+            dados.servico = Number(dados.servico);
+            dados.area = Number(dados.area);
+            dados.horas_trabalhadas = Number(dados.horas_trabalhadas);
+            dados.condicao_trabalho = Number(dados.condicao_trabalho);
+            dados.horas_equipamento = dados.horas_equipamento === "" ? 0 : Number(dados.horas_equipamento);
+            dados.tempo_ocioso = dados.tempo_ocioso === "" ? 0 : Number(dados.tempo_ocioso);
+            dados.equipamento = dados.equipamento ? Number(dados.equipamento) : null;
+
+            mensagem.textContent = "Salvando apontamento...";
+            botao.disabled = true;
+
+            try {
+                await obter("/api/apontamentos/criar/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": dadosFormulario.get("csrfmiddlewaretoken") || ""
+                    },
+                    body: JSON.stringify(dados)
+                });
+
+                mensagem.textContent = "Apontamento salvo com sucesso!";
+                formulario.reset();
+                await carregarPainel();
+                await carregarMeses();
+            } catch (erro) {
+                console.error("Erro ao salvar apontamento:", erro);
+                mensagem.textContent = `Não foi possível salvar o apontamento: ${erro.message}`;
+            } finally {
+                botao.disabled = false;
+            }
+        });
+
+        document.querySelectorAll("[data-aba]").forEach((botao) => {
+            botao.addEventListener("click", async () => {
+                const destino = botao.dataset.aba;
+
+                document.querySelectorAll(".aba-conteudo").forEach((aba) => {
+                    aba.hidden = aba.id !== destino;
+                });
+
+                document.querySelectorAll("[data-aba]").forEach((item) => {
+                    item.classList.toggle("ativa", item === botao);
+                });
+
+                if (destino === "aba-historico") {
+                    await carregarMeses();
+                }
             });
-            const conteudo = await resposta.json();
-            resultado.textContent = resposta.ok
-                ? `Produtividade prevista: ${formatar(conteudo.produtividade_prevista)} (erro médio: ${formatar(conteudo.erro_medio)})`
-                : (conteudo.erro || "Confira os dados informados.");
+        });
+
+        function formatarMes(valor) {
+            const [ano, mes] = valor.split("-").map(Number);
+            return new Date(ano, mes - 1, 1).toLocaleDateString("pt-BR", {
+                month: "long",
+                year: "numeric"
+            });
+        }
+
+        async function carregarMeses() {
+            const seletor = document.getElementById("mes-selecionado");
+            try {
+                const resposta = await obter("/api/meses/");
+                const meses = extrairLista(resposta);
+                const valorAnterior = seletor.value;
+                seletor.replaceChildren();
+
+                meses.forEach((item) => {
+                    if (!item.mes) return;
+                    const opcao = document.createElement("option");
+                    const chave = item.mes.slice(0, 7);
+                    opcao.value = chave;
+                    opcao.textContent = `${formatarMes(chave)}${item.atual ? " (em andamento)" : " (fechado)"}`;
+                    seletor.appendChild(opcao);
+                });
+
+                if (meses.some((item) => item.mes && item.mes.slice(0, 7) === valorAnterior)) {
+                    seletor.value = valorAnterior;
+                }
+
+                if (!seletor.options.length) {
+                    const opcao = document.createElement("option");
+                    opcao.value = "";
+                    opcao.textContent = "Nenhum mês disponível";
+                    seletor.appendChild(opcao);
+                }
+            } catch (erro) {
+                console.error("Erro ao carregar meses:", erro);
+                seletor.replaceChildren();
+                const opcao = document.createElement("option");
+                opcao.value = "";
+                opcao.textContent = `Erro ao carregar meses: ${erro.message}`;
+                seletor.appendChild(opcao);
+            }
+        }
+
+        function adicionarTabela(container, titulo, colunas, linhas) {
+            const subtitulo = document.createElement("h3");
+            subtitulo.textContent = titulo;
+            container.appendChild(subtitulo);
+
+            if (!Array.isArray(linhas) || !linhas.length) {
+                const mensagem = document.createElement("p");
+                mensagem.textContent = "Nenhum registro encontrado neste período.";
+                container.appendChild(mensagem);
+                return;
+            }
+
+            const tabela = document.createElement("table");
+            const thead = document.createElement("thead");
+            const linhaCabecalho = document.createElement("tr");
+
+            colunas.forEach((coluna) => {
+                const th = document.createElement("th");
+                th.textContent = coluna.titulo;
+                linhaCabecalho.appendChild(th);
+            });
+
+            thead.appendChild(linhaCabecalho);
+            tabela.appendChild(thead);
+
+            const tbody = document.createElement("tbody");
+            linhas.forEach((item) => {
+                const tr = document.createElement("tr");
+                colunas.forEach((coluna) => {
+                    const td = document.createElement("td");
+                    const valor = item[coluna.campo];
+                    td.textContent = valor == null
+                        ? "-"
+                        : (coluna.numero ? formatar(valor) : String(valor));
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+
+            tabela.appendChild(tbody);
+            const wrapper = document.createElement("div");
+            wrapper.className = "tabela";
+            wrapper.appendChild(tabela);
+            container.appendChild(wrapper);
+        }
+
+        document.getElementById("btn-detalhes-mes").addEventListener("click", async () => {
+            const selecionado = document.getElementById("mes-selecionado").value;
+            const container = document.getElementById("detalhes-mes");
+            container.replaceChildren();
+
+            if (!selecionado) {
+                container.textContent = "Selecione um mês.";
+                return;
+            }
+
+            const [ano, mes] = selecionado.split("-");
+            container.textContent = "Carregando detalhes...";
+
+            try {
+                const dados = await obter(`/api/meses/${ano}/${Number(mes)}/`);
+                const totais = dados.totais || {};
+                container.replaceChildren();
+
+                const resumo = document.createElement("div");
+                resumo.className = "mensagem";
+                resumo.textContent =
+                    `Resumo de ${formatarMes(selecionado)}: ` +
+                    `${formatar(totais.total_registros)} registros, ` +
+                    `${formatar(totais.area_total)} m² produzidos, ` +
+                    `${formatar(totais.horas_totais)} horas e ` +
+                    `produtividade média de ${formatar(totais.produtividade_media)}.`;
+                container.appendChild(resumo);
+
+                adicionarTabela(container, "Apontamentos de produção real", [
+                    { campo: "data", titulo: "Data" },
+                    { campo: "obra__nome", titulo: "Obra" },
+                    { campo: "servico__nome", titulo: "Serviço" },
+                    { campo: "equipe__nome", titulo: "Equipe" },
+                    { campo: "area", titulo: "Área", numero: true },
+                    { campo: "horas_trabalhadas", titulo: "Horas", numero: true },
+                    { campo: "produtividade", titulo: "Produtividade", numero: true }
+                ], dados.registros || []);
+
+                adicionarTabela(container, "Previsões calculadas", [
+                    { campo: "criado_em", titulo: "Data da previsão" },
+                    { campo: "obra__nome", titulo: "Obra" },
+                    { campo: "servico__nome", titulo: "Serviço" },
+                    { campo: "equipe__nome", titulo: "Equipe" },
+                    { campo: "area", titulo: "Área informada", numero: true },
+                    { campo: "horas", titulo: "Horas informadas", numero: true },
+                    { campo: "produtividade_prevista", titulo: "Produtividade prevista", numero: true },
+                    { campo: "erro_medio", titulo: "Erro médio", numero: true }
+                ], dados.previsoes || []);
+            } catch (erro) {
+                container.textContent = `Não foi possível carregar os detalhes desse mês: ${erro.message}`;
+                console.error("Erro ao carregar detalhes do mês:", erro);
+            }
         });
 
         carregarPainel();

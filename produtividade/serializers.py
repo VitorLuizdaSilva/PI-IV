@@ -38,8 +38,8 @@ class RegistroProdutividadeSerializer(serializers.ModelSerializer):
     class Meta:
         model = RegistroProdutividade
         fields = "__all__"
-
-
+        read_only_fields = ["id", "produtividade"]
+        
 class RegistroTelemetriaSerializer(serializers.ModelSerializer):
     class Meta:
         model = RegistroTelemetria
@@ -60,3 +60,4 @@ class PrevisaoSerializer(serializers.Serializer):
     )
     horas_equipamento = serializers.FloatField(min_value=0, default=0)
     tempo_ocioso = serializers.FloatField(min_value=0, default=0)
+

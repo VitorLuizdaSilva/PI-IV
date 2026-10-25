@@ -1,0 +1,123 @@
+
+<section class="cards" aria-label="Indicadores gerais">
+    <article class="card">
+        <span>Registros</span>
+        <strong id="total-registros">-</strong>
+    </article>
+
+    <article class="card">
+        <span>Área produzida</span>
+        <strong id="area-total">-</strong>
+    </article>
+
+    <article class="card">
+        <span>Horas trabalhadas</span>
+        <strong id="horas-totais">-</strong>
+    </article>
+
+    <article class="card">
+        <span>Produtividade média</span>
+        <strong id="produtividade-media">-</strong>
+    </article>
+</section>
+
+<section class="grade">
+    <article class="painel">
+        <h2>Últimos apontamentos</h2>
+
+        <div class="tabela">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Obra</th>
+                        <th>Serviço</th>
+                        <th>Área</th>
+                        <th>Produtividade</th>
+                    </tr>
+                </thead>
+
+                <tbody id="registros">
+                    <tr>
+                        <td colspan="5">Carregando...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </article>
+
+    <article class="painel">
+        <h2>Simular previsão</h2>
+
+        <form id="form-previsao">
+            {% csrf_token %}
+
+            <label>
+                <span>Área</span>
+                <input name="area" type="number" min="0.01"
+                       step="0.01" value="150" required>
+            </label>
+
+            <label>
+                <span>Horas</span>
+                <input name="horas" type="number" min="0.01"
+                       step="0.01" value="8" required>
+            </label>
+
+            <label>
+                <span>Condição</span>
+                <select name="condicao" required>
+                    <option value="1">Ruim</option>
+                    <option value="2">Regular</option>
+                    <option value="3" selected>Boa</option>
+                </select>
+            </label>
+
+            <label>
+                <span>Equipe</span>
+                <select name="equipe" id="equipe" required>
+                    <option value="">Carregando...</option>
+                </select>
+            </label>
+
+            <label>
+                <span>Serviço</span>
+                <select name="servico" id="servico" required>
+                    <option value="">Carregando...</option>
+                </select>
+            </label>
+
+            <label>
+                <span>Obra</span>
+                <select name="obra" id="obra" required>
+                    <option value="">Carregando...</option>
+                </select>
+            </label>
+
+            <label>
+                <span>Equipamento</span>
+                <select name="equipamento" id="equipamento">
+                    <option value="">Nenhum</option>
+                </select>
+            </label>
+
+            <label>
+                <span>Horas do equipamento</span>
+                <input name="horas_equipamento" type="number"
+                       min="0" step="0.01" value="6">
+            </label>
+
+            <label>
+                <span>Tempo ocioso</span>
+                <input name="tempo_ocioso" type="number"
+                       min="0" step="0.01" value="0.5">
+            </label>
+
+            <button id="btn-prever" type="submit">
+                Calcular previsão
+            </button>
+        </form>
+
+        <div id="resultado" role="status" aria-live="polite"></div>
+    </article>
+</section>

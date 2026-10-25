@@ -97,3 +97,115 @@ class RegistroTelemetria(models.Model):
 
     def __str__(self):
         return f"{self.equipamento} - {self.registrado_em:%d/%m/%Y %H:%M}"
+
+
+
+class HistoricoPrevisao(models.Model):
+    """
+    Guarda cada previsão calculada pelo modelo de Machine Learning.
+    """
+
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    obra = models.ForeignKey(
+        "produtividade.Obra",
+        on_delete=models.PROTECT,
+        related_name="previsoes",
+    )
+
+    equipe = models.ForeignKey(
+        "produtividade.Equipe",
+        on_delete=models.PROTECT,
+        related_name="previsoes",
+    )
+
+    servico = models.ForeignKey(
+        "produtividade.Servico",
+        on_delete=models.PROTECT,
+        related_name="previsoes",
+    )
+
+    equipamento = models.ForeignKey(
+        "produtividade.Equipamento",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="previsoes",
+    )
+
+    area = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+
+    horas = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+
+    condicao = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+    )
+
+
+    horas_equipamento = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=0,
+    )
+
+    tempo_ocioso = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=0,
+    )
+
+    produtividade_prevista = models.DecimalField(
+        max_digits=12,
+        decimal_places=4,
+        null=True,
+        blank=True,
+    )
+
+    erro_medio = models.DecimalField(
+        max_digits=12,
+        decimal_places=4,
+        null=True,
+        blank=True,
+    )
+
+    def __str__(self):
+        return f"Previsão {self.pk} - {self.criado_em:%m/%Y}"
+
+
+class FechamentoMensal(models.Model):
+    """
+    Salva uma fotografia dos indicadores de produção de cada mês.
+    """
+
+    mes = models.DateField(
+        unique=True,
+        help_text="Primeiro dia do mês de referência.",
+    )
+
+    total_registros = models.PositiveIntegerField(default=0)
+    area_total = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    horas_totais = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    produtividade_media = models.DecimalField(
+        max_digits=12,
+        decimal_places=4,
+        default=0,
+    )
+
+    fechado_em = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.mes.strftime("%m/%Y")
+
+    class Meta:
+        ordering = ["-mes"]

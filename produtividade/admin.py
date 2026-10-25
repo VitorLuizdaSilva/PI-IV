@@ -7,6 +7,8 @@ from .models import (
     RegistroProdutividade,
     RegistroTelemetria,
     Servico,
+    HistoricoPrevisao, 
+    FechamentoMensal
 )
 
 
@@ -58,3 +60,7 @@ class RegistroTelemetriaAdmin(admin.ModelAdmin):
         "producao",
     )
     list_filter = ("obra", "equipamento")
+
+
+admin.site.register(HistoricoPrevisao)
+admin.site.register(FechamentoMensal)
