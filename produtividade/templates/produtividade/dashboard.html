@@ -14,16 +14,45 @@
             --borda: #dbe2e8;
         }
         * { box-sizing: border-box; }
+        
+
+        .btn-sair {
+            background-color: #ef4444;
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-block;
+            width: auto;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-sair:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-sair:active {
+            transform: scale(0.97);
+        }
         body {
             margin: 0;
             background: #f4f6f8;
             color: #17212b;
             font: 16px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
+        
         header {
-            background: var(--azul);
-            color: white;
-            padding: 28px max(24px, calc((100% - 1180px) / 2));
+            display: flex;
+            justify-content: space-between;
+            align-items: center; 
+            background-color: #0b1d3a; 
+            color: #ffffff;
+            padding: 16px 24px;
         }
         header h1 { margin: 0 0 6px; font-size: clamp(1.5rem, 4vw, 2.25rem); }
         header p { margin: 0; opacity: .85; }
@@ -102,22 +131,32 @@
 </head>
 <body>
     <header>
+    <div>
         <h1>Painel de produtividade</h1>
         <p>Protótipo acadêmico para acompanhamento de obras</p>
-    </header>
-
+    </div>
+    
+        
+    <form method="POST" action="{% url 'logout' %}" style="margin: 0;">
+        {% csrf_token %}
+        <button type="submit" class="btn-sair">Sair</button>
+    </form>
+</header>
     <main>
         <nav class="abas" aria-label="Navegação do painel">
             <button type="button" class="ativa" data-aba="aba-painel">
                 Previsão
             </button>
-            <button type="button" data-aba="aba-historico">
-                Histórico mensal
-            </button>
 
             <button type="button" data-aba="aba-apontamento">
                 Novo apontamento
             </button>
+
+            <button type="button" data-aba="aba-historico">
+                Histórico mensal
+            </button>
+
+            
         </nav>
         
         <section id="aba-painel" class="aba-conteudo">
@@ -167,7 +206,15 @@
             </section>
         </section>
 
-       
+        
+        <section id="aba-apontamento" class="aba-conteudo" hidden>
+            <article class="painel">
+                <h2>Novo apontamento</h2>
+
+                {% include "produtividade/abas/novo_apontamento.html" %}
+            </article>
+        </section>
+
         <section id="aba-historico" class="aba-conteudo" hidden>
             <article class="painel">
                 <h2>Histórico mensal</h2>
@@ -178,15 +225,6 @@
                 </label>
                 <button type="button" id="btn-detalhes-mes" class="botao-detalhes">Ver detalhes do mês</button>
                 <div id="detalhes-mes" style="margin-top: 22px;"></div>
-            </article>
-        </section>
-        
-        
-        <section id="aba-apontamento" class="aba-conteudo" hidden>
-            <article class="painel">
-                <h2>Novo apontamento</h2>
-
-                {% include "produtividade/abas/novo_apontamento.html" %}
             </article>
         </section>
 

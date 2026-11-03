@@ -21,9 +21,8 @@ urlpatterns = [
         include("produtividade.urls")
     ),
 
-    # ---> ADICIONE ESTA LINHA ABAIXO <---
     path(
-        "usuarios/",
+        "",
         include("usuarios.urls")
     ),
 
