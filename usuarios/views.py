@@ -4,12 +4,14 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
+from django.db import transaction
 
 
 @login_required(login_url="login")
 def cadastro(request):
     usuario = request.user
 
+    
     autorizado = (
         usuario.is_superuser
         or usuario.groups.filter(name="Gerente").exists()
@@ -22,12 +24,29 @@ def cadastro(request):
         formulario = UserCreationForm(request.POST)
 
         if formulario.is_valid():
-            novo_usuario = formulario.save()
 
-            grupo = Group.objects.get(name="Funcionario")
-            novo_usuario.groups.add(grupo)
+            try:
+                with transaction.atomic():
 
-            return redirect("dashboard")
+                  
+                    novo_usuario = formulario.save()
+
+                    
+                    grupo, criado = Group.objects.get_or_create(
+                        name="Funcionario"
+                    )
+
+                    
+                    novo_usuario.groups.add(grupo)
+
+                return redirect("dashboard")
+
+            except Exception:
+                formulario.add_error(
+                    None,
+                    "Não foi possível concluir o cadastro. Tente novamente."
+                )
+
     else:
         formulario = UserCreationForm()
 

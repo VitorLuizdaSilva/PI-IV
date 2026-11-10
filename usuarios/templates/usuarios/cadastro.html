@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro - Produtividade Obra</title>
+
     <style>
         * {
             margin: 0;
@@ -13,7 +14,7 @@
         }
 
         body {
-            background-color: #f1f5f9; /* Cinza claro suave */
+            background-color: #f1f5f9;
             color: #1e293b;
             display: flex;
             justify-content: center;
@@ -39,7 +40,6 @@
             text-align: center;
         }
 
-        /* Estilização dos campos gerados pelo Django */
         form p {
             margin-bottom: 16px;
             display: flex;
@@ -86,7 +86,7 @@
         button[type="submit"] {
             width: 100%;
             padding: 12px;
-            background-color: #334155; /* Cinza chumbo elegante */
+            background-color: #334155;
             color: white;
             border: none;
             border-radius: 6px;
@@ -101,38 +101,47 @@
             background-color: #1e293b;
         }
 
-        .footer-link {
+        .voltar {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-top: 12px;
             text-align: center;
-            margin-top: 24px;
-            font-size: 0.85rem;
-            color: #64748b;
-        }
-
-        .footer-link a {
+            background-color: #f1f5f9;
             color: #334155;
-            text-decoration: none;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 0.9rem;
             font-weight: 600;
+            text-decoration: none;
+            transition: background-color 0.2s;
         }
 
-        .footer-link a:hover {
-            text-decoration: underline;
+        .voltar:hover {
+            background-color: #e2e8f0;
         }
+
     </style>
 </head>
+
 <body>
 
     <div class="card">
+
         <h1>Criar Conta</h1>
 
         <form method="POST" id="form-cadastro">
             {% csrf_token %}
+
             {{ formulario.as_p }}
+
             <button type="submit">Cadastrar</button>
         </form>
 
-        <div class="footer-link">
-            Já possui uma conta? <a href="{% url 'login' %}">Entrar</a>
-        </div>
+        <a href="{% url 'dashboard' %}" class="voltar">
+            ← Voltar para Dashboard
+        </a>
+
     </div>
 
     <script>
@@ -141,5 +150,7 @@
             if (primeiroInput) primeiroInput.focus();
         });
     </script>
+
 </body>
 </html>
+```
