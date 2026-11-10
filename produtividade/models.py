@@ -1,6 +1,14 @@
 from django.core.validators import MinValueValidator
 from django.db import models
 
+class Equipamento(models.Model):
+    nome = models.CharField(max_length=100)
+    identificador = models.CharField(max_length=50, unique=True)
+    tipo = models.CharField(max_length=100)
+    ativo = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.identificador} - {self.nome}"
 
 class Equipe(models.Model):
     nome = models.CharField(max_length=100)
@@ -25,14 +33,6 @@ class Servico(models.Model):
     def __str__(self):
         return self.nome
 
-
-class Equipamento(models.Model):
-    nome = models.CharField(max_length=100)
-    identificador = models.CharField(max_length=50, unique=True)
-    tipo = models.CharField(max_length=100)
-
-    def __str__(self):
-        return f"{self.identificador} - {self.nome}"
 
 
 class RegistroProdutividade(models.Model):

@@ -1,23 +1,71 @@
+<h2>Histórico mensal</h2>
 
-<article class="painel">
-    <h2>Histórico mensal</h2>
+            <p>
+                Selecione um mês e utilize os filtros para consultar
+                os registros de produtividade.
+            </p>
 
-    <p>
-        Selecione um período para consultar os totais,
-        os apontamentos reais e as previsões calculadas.
-    </p>
+            <label>
+                <span>Mês disponível</span>
+                <select id="mes-selecionado">
+                    <option value="">Carregando meses...</option>
+                </select>
+            </label>
 
-    <label>
-        <span>Mês disponível</span>
-        <select id="mes-selecionado">
-            <option value="">Carregando meses...</option>
-        </select>
-    </label>
+            <h3>Filtros</h3>
 
-    <button type="button" id="btn-detalhes-mes"
-            class="botao-detalhes">
-        Ver detalhes do mês
-    </button>
+            <form id="form-filtros-historico">
 
-    <div id="detalhes-mes" style="margin-top: 22px;"></div>
-</article>
+                <label>
+                    <span>Obra</span>
+                    <select id="filtro-obra">
+                        <option value="">Todas as obras</option>
+                    </select>
+                </label>
+
+                <label>
+                    <span>Serviço</span>
+                    <select id="filtro-servico">
+                        <option value="">Todos os serviços</option>
+                    </select>
+                </label>
+
+                <label>
+                    <span>Equipe</span>
+                    <select id="filtro-equipe">
+                        <option value="">Todas as equipes</option>
+                    </select>
+                </label>
+
+                <label>
+                    <span>Equipamento</span>
+                    <select id="filtro-equipamento">
+                        <option value="">Todos os equipamentos</option>
+                    </select>
+                </label>
+
+                <label>
+                    <span>Data inicial</span>
+                    <input type="date" id="filtro-data-inicio">
+                </label>
+
+                <label>
+                    <span>Data final</span>
+                    <input type="date" id="filtro-data-fim">
+                </label>
+
+                <button type="button" id="btn-aplicar-filtros">
+                    Aplicar filtros
+                </button>
+
+                <button type="button" id="btn-limpar-filtros">
+                    Limpar filtros
+                </button>
+
+            </form>
+
+            <button type="button" id="btn-detalhes-mes" class="botao-detalhes">
+                Ver detalhes do mês
+            </button>
+
+            <div id="detalhes-mes" style="margin-top: 22px;"></div>

@@ -3,18 +3,30 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import Group
 
 
+@login_required(login_url="login")
 def cadastro(request):
-    if request.user.is_authenticated:
+    usuario = request.user
+
+    autorizado = (
+        usuario.is_superuser
+        or usuario.groups.filter(name="Gerente").exists()
+    )
+
+    if not autorizado:
         return redirect("dashboard")
 
     if request.method == "POST":
         formulario = UserCreationForm(request.POST)
 
         if formulario.is_valid():
-            usuario = formulario.save()
-            login(request, usuario)
+            novo_usuario = formulario.save()
+
+            grupo = Group.objects.get(name="Funcionario")
+            novo_usuario.groups.add(grupo)
+
             return redirect("dashboard")
     else:
         formulario = UserCreationForm()

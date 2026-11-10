@@ -18,7 +18,11 @@ router = DefaultRouter()
 router.register("equipes", EquipeViewSet)
 router.register("obras", ObraViewSet)
 router.register("servicos", ServicoViewSet)
-router.register("equipamentos", EquipamentoViewSet)
+router.register(
+    "equipamentos",
+    EquipamentoViewSet,
+    basename="equipamento"
+)
 router.register("registros", RegistroProdutividadeViewSet)
 router.register("telemetria", RegistroTelemetriaViewSet)
 

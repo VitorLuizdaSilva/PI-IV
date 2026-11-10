@@ -32,7 +32,7 @@ class ServicoAdmin(admin.ModelAdmin):
 
 @admin.register(Equipamento)
 class EquipamentoAdmin(admin.ModelAdmin):
-    list_display = ("identificador", "nome", "tipo")
+    list_display = ("identificador", "nome", "tipo", "ativo")
     search_fields = ("identificador", "nome", "tipo")
 
 

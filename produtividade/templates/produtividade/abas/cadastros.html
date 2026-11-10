@@ -1,0 +1,83 @@
+<article class="painel">
+
+    <h2>Gerenciamento de equipamentos</h2>
+
+    <p>Cadastre, edite e desative os equipamentos utilizados nas obras.</p>
+
+    <h3 id="titulo-form-equipamento">Cadastrar equipamento</h3>
+
+    <form id="form-equipamento">
+        {% csrf_token %}
+
+        <label>
+            <span>Nome do equipamento</span>
+            <input
+                type="text"
+                id="cad-nome"
+                maxlength="100"
+                placeholder="Ex.: Escavadeira"
+                required
+            >
+        </label>
+
+        <label>
+            <span>Identificador</span>
+            <input
+                type="text"
+                id="cad-identificador"
+                maxlength="50"
+                placeholder="Ex.: ESC-001"
+                required
+            >
+        </label>
+
+        <label>
+            <span>Tipo</span>
+            <input
+                type="text"
+                id="cad-tipo"
+                maxlength="100"
+                placeholder="Ex.: Escavadeira hidráulica"
+                required
+            >
+        </label>
+
+        <button type="submit" id="btn-salvar-equipamento">
+            Cadastrar equipamento
+        </button>
+
+        <button
+            type="button"
+            id="btn-cancelar-edicao"
+            class="botao-detalhes"
+            hidden
+        >
+            Cancelar edição
+        </button>
+    </form>
+
+    <div id="mensagem-equipamento" class="mensagem" hidden></div>
+
+    <h3>Equipamentos cadastrados</h3>
+
+    <div class="tabela">
+        <table>
+            <thead>
+                <tr>
+                <th>Identificador</th>
+                <th>Nome</th>
+                <th>Tipo</th>
+                <th>Status</th>
+                <th>Ações</th>
+                </tr>
+             </thead>
+
+            <tbody id="lista-equipamentos">
+                <tr>
+                    <td colspan="5">Carregando equipamentos...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</article>
