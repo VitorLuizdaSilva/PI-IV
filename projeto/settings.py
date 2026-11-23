@@ -37,7 +37,7 @@ def obter_variavel(nome):
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv(
     "DJANGO_SECRET_KEY",
-    "django-insecure-chave-apenas-para-desenvolvimento",
+    
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -100,11 +100,11 @@ WSGI_APPLICATION = 'projeto.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': '',
-        'USER': '',
-        'PASSWORD': '',
-        'HOST': '',
-        'PORT': '',
+        'NAME': 'DATABASE_NAME',
+        'USER': 'DATABASE_USER',
+        'PASSWORD': 'DATABASE_PASSWORD',
+        'HOST': 'DATABASE_HOST',
+        'PORT': 'DATABASE_PORT',
     }
 }
 
